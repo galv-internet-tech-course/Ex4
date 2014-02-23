@@ -1,0 +1,41 @@
+lets take a look at this code, that contains asynchronous lines:
+
+var defaultVal = 0;
+
+$(document).ready(function() {
+	$("form").submit(handleLogin);
+	$("#input_box").keypress(verifyNumber);
+	$("#settings_button").click(handleSettings);
+
+	var calc = new Calculator();
+	$("#add_button").click(calc.handleAdd);
+	$("#mul_button").click(calc.handleMul);
+	$("#clear_button").click(calc.handleClear);
+});
+
+function verifyNumber(event) {...}
+function handleSettings(event) {...}
+function Calculator() {
+	var curVal = defaultVal;
+	this.handleAdd = function(event) {...}
+	this.handleMul = function(event) {...}
+	this.handleClear = function(event) {...}
+}
+
+
+At the begining, the function (that is given as an argument to the ready function) is being registered(using $(document).ready()) as a callback that should be called when the DOM is ready. The function is not executed at the moment.
+The function is being excecuted (asynchroniously) only when the DOM is ready.
+First, the function adds an event listener of "submit" to the login form. The callback handleLogin won't run at the moment, it will only run after the send button is pressed.
+Then it adds an event listener of keypress to the input box. The verifyNumber callback will run only when a keyboard button is pressed in the input box.
+Then it adds an event listener of click to the settings button. The handleSettings callback will run only when the settings button is pressed.
+Then it creates the calc object with the Calculator constructor. The Calculator constructor is executed now and returns the new object:
+	When the Calculator constructor is executed it first creates a variable "curVal" and initialize it to the global variable defaultVal that was initialized to 0.
+	Then it sets 3 members of the new object (this): handleAdd, handleMul, handleClear, which are function objects.  These functions can use the curVal variable.
+Then it adds an event listener of click to the add, mul and clear buttons. the callbacks calc.handleAdd, calc.handleMul and calc.handleClear will run only when these buttons are pressed.
+Then the function returns. 
+After the function returns, if one of the events (that we are waiting for) is ready (if it has already happened, for example if the Send button had been pressed in the login form) then the event-loop will execute the suitable callback.
+If more then one event is ready, the event-loop will execute the suitable callback in the order that they occured: It will execute the first one, after it returns it will execute the second one, and so on. 
+If there is no event waiting at the moment, no code will be excecuted until one of the events occurs, and then the event-loop will execute the suitable callback. 
+
+In summary, the order of execution is known (as described above) only until the callback of $(document).ready() returns. From then and on, the order of execution depends on the events that the user creates.
+The callbacks that were registered for the possible events are excecuted one after the other in the order of the events occurance, and when there is no callback to run JS just waits for the next event.  
